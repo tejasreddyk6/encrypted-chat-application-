@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Encrypted Chat Application</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="header">
+            <h1>🔐 Encrypted Chat</h1>
+            <p>Secure Real-Time Messaging</p>
+        </div>
+
+        <div class="login-box" id="loginBox">
+
+            <h2>Join Chat</h2>
+
+            <input
+                type="text"
+                id="username"
+                placeholder="Enter your name"
+            >
+
+            <input
+                type="password"
+                id="secretKey"
+                placeholder="Enter secret key"
+            >
+
+            <button onclick="joinChat()">
+                Join Secure Chat
+            </button>
+
+        </div>
+
+        <div class="chat-container" id="chatContainer">
+
+            <div class="chat-header">
+                <span id="welcome"></span>
+
+                <button onclick="logout()">
+                    Logout
+                </button>
+            </div>
+
+            <div id="messages"></div>
+
+            <div class="message-area">
+
+                <input
+                    type="text"
+                    id="messageInput"
+                    placeholder="Type your encrypted message..."
+                    onkeypress="handleEnter(event)"
+                >
+
+                <button onclick="sendMessage()">
+                    Send
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>

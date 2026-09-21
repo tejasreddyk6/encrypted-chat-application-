@@ -1,0 +1,13 @@
+{
+  "name": "encrypted-chat-application",
+  "version": "1.0.0",
+  "description": "Encrypted Chat Application - BCA 5th Semester Project",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "socket.io": "^4.8.1"
+  }
+}

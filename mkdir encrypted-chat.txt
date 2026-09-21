@@ -1,0 +1,6 @@
+mkdir encrypted-chat
+cd encrypted-chat
+npm init -y
+npm install express socket.io
+mkdir public
+code .
