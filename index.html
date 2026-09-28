@@ -1,83 +1,118 @@
-<!DOCTYPE html>
-<html lang="en">
+<div class="message-area">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <input
+        type="text"
+        id="messageInput"
+        placeholder="Type your encrypted message..."
+        onkeypress="handleEnter(event)"
+    >
 
-    <title>Encrypted Chat Application</title>
+    <button onclick="sendMessage()">
+        Send
+    </button>
 
-    <link rel="stylesheet" href="style.css">
+    <!-- Photo button -->
+    <button onclick="document.getElementById('photoInput').click()">
+        📷 Photo
+    </button>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+    <input
+        type="file"
+        id="photoInput"
+        accept="image/*"
+        style="display:none"
+        onchange="sendPhoto(event)"
+    >
 
-    <script src="/socket.io/socket.io.js"></script>
-</head>
+    <!-- Document button -->
+    <button onclick="document.getElementById('documentInput').click()">
+        📄 Document
+    </button>
 
-<body>
+    <input
+        type="file"
+        id="documentInput"
+        accept=".pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx"
+        style="display:none"
+        onchange="sendDocument(event)"
+    >
 
-    <div class="container">
+</div><div class="message-area">
 
-        <div class="header">
-            <h1>🔐 Encrypted Chat</h1>
-            <p>Secure Real-Time Messaging</p>
-        </div>
+    <input
+        type="text"
+        id="messageInput"
+        placeholder="Type your encrypted message..."
+        onkeypress="handleEnter(event)"
+    >
 
-        <div class="login-box" id="loginBox">
+    <button onclick="sendMessage()">
+        Send
+    </button>
 
-            <h2>Join Chat</h2>
+    <!-- Photo button -->
+    <button onclick="document.getElementById('photoInput').click()">
+        📷 Photo
+    </button>
 
-            <input
-                type="text"
-                id="username"
-                placeholder="Enter your name"
-            >
+    <input
+        type="file"
+        id="photoInput"
+        accept="image/*"
+        style="display:none"
+        onchange="sendPhoto(event)"
+    >
 
-            <input
-                type="password"
-                id="secretKey"
-                placeholder="Enter secret key"
-            >
+    <!-- Document button -->
+    <button onclick="document.getElementById('documentInput').click()">
+        📄 Document
+    </button>
 
-            <button onclick="joinChat()">
-                Join Secure Chat
-            </button>
+    <input
+        type="file"
+        id="documentInput"
+        accept=".pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx"
+        style="display:none"
+        onchange="sendDocument(event)"
+    >
 
-        </div>
+</div><div class="message-area">
 
-        <div class="chat-container" id="chatContainer">
+    <input
+        type="text"
+        id="messageInput"
+        placeholder="Type your encrypted message..."
+        onkeypress="handleEnter(event)"
+    >
 
-            <div class="chat-header">
-                <span id="welcome"></span>
+    <button onclick="sendMessage()">
+        Send
+    </button>
 
-                <button onclick="logout()">
-                    Logout
-                </button>
-            </div>
+    <!-- Photo button -->
+    <button onclick="document.getElementById('photoInput').click()">
+        📷 Photo
+    </button>
 
-            <div id="messages"></div>
+    <input
+        type="file"
+        id="photoInput"
+        accept="image/*"
+        style="display:none"
+        onchange="sendPhoto(event)"
+    >
 
-            <div class="message-area">
+    <!-- Document button -->
+    <button onclick="document.getElementById('documentInput').click()">
+        📄 Document
+    </button>
 
-                <input
-                    type="text"
-                    id="messageInput"
-                    placeholder="Type your encrypted message..."
-                    onkeypress="handleEnter(event)"
-                >
+    <input
+        type="file"
+        id="documentInput"
+        accept=".pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx"
+        style="display:none"
+        onchange="sendDocument(event)"
+    >
 
-                <button onclick="sendMessage()">
-                    Send
-                </button>
-
-            </div>
-
-        </div>
-
-    </div>
-
-    <script src="script.js"></script>
-
-</body>
-
-</html>
+</div>

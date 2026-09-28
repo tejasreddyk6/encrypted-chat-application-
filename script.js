@@ -1,66 +1,5 @@
-const socket = io();
-
-let username = "";
-let secretKey = "";
-
-function joinChat() {
-
-    username = document.getElementById("username").value.trim();
-    secretKey = document.getElementById("secretKey").value;
-
-    if (username === "") {
-        alert("Please enter your name.");
-        return;
-    }
-
-    if (secretKey.length < 4) {
-        alert("Secret key must contain at least 4 characters.");
-        return;
-    }
-
-    document.getElementById("loginBox").style.display = "none";
-
-    document.getElementById("chatContainer").style.display = "block";
-
-    document.getElementById("welcome").innerText =
-        "Welcome, " + username + " 🔐";
-}
-
-
-function encryptMessage(message) {
-
-    return CryptoJS.AES.encrypt(
-        message,
-        secretKey
-    ).toString();
-
-}
-
-
-function decryptMessage(encryptedMessage) {
-
-    try {
-
-        const bytes = CryptoJS.AES.decrypt(
-            encryptedMessage,
-            secretKey
-        );
-
-        return bytes.toString(CryptoJS.enc.Utf8);
-
-    } catch (error) {
-
-        return "Unable to decrypt message";
-
-    }
-
-}
-
-
 function sendMessage() {
-
     const input = document.getElementById("messageInput");
-
     const message = input.value.trim();
 
     if (message === "") {
@@ -70,19 +9,94 @@ function sendMessage() {
     const encryptedMessage = encryptMessage(message);
 
     socket.emit("chat message", {
-
         username: username,
-
         message: encryptedMessage,
-
         time: new Date().toLocaleTimeString()
-
     });
 
     input.value = "";
+}
+// Maximum file size: 5 MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
+
+// Send photo
+function sendPhoto(event) {
+
+    const file = event.target.files[0];
+
+    if (!file) {
+        return;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+        alert("Photo must be less than 5 MB.");
+        event.target.value = "";
+        return;
+    }
+
+    sendFile(file);
+
+    event.target.value = "";
 }
 
+
+// Send document
+function sendDocument(event) {
+
+    const file = event.target.files[0];
+
+    if (!file) {
+        return;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+        alert("Document must be less than 5 MB.");
+        event.target.value = "";
+        return;
+    }
+
+    sendFile(file);
+
+    event.target.value = "";
+}
+
+
+// Convert file into encrypted data and send
+function sendFile(file) {
+
+    const reader = new FileReader();
+
+    reader.onload = function () {
+
+        // File data
+        const fileData = reader.result;
+
+        // Encrypt file data
+        const encryptedFile = encryptMessage(fileData);
+
+        // Send encrypted file through Socket.IO
+        socket.emit("chat message", {
+
+            username: username,
+
+            message: encryptedFile,
+
+            type: "file",
+
+            fileName: file.name,
+
+            fileType: file.type,
+
+            time: new Date().toLocaleTimeString()
+        });
+    };
+
+    reader.readAsDataURL(file);
+}
+
+
+// Receive text messages, photos and documents
 socket.on("chat message", (data) => {
 
     const messages = document.getElementById("messages");
@@ -93,66 +107,96 @@ socket.on("chat message", (data) => {
 
     messageDiv.className = "message";
 
-    messageDiv.innerHTML = `
 
-        <strong>${escapeHTML(data.username)}</strong>
+    // =========================
+    // PHOTO OR DOCUMENT
+    // =========================
 
-        <small>
-            ${escapeHTML(data.time)}
-        </small>
+    if (data.type === "file") {
 
-        <p>
-            ${escapeHTML(decryptedMessage)}
-        </p>
-
-        <div class="encrypted">
-            🔒 Message encrypted before transmission
-        </div>
-
-    `;
-
-    messages.appendChild(messageDiv);
-
-    messages.scrollTop = messages.scrollHeight;
-
-});
+        messageDiv.innerHTML = `
+            <strong>${escapeHTML(data.username)}</strong>
+            <small>${escapeHTML(data.time)}</small>
+        `;
 
 
-function escapeHTML(text) {
+        // If the received file is a photo
+        if (data.fileType && data.fileType.startsWith("image/")) {
 
-    const div = document.createElement("div");
+            const image = document.createElement("img");
 
-    div.textContent = text;
+            image.src = decryptedMessage;
 
-    return div.innerHTML;
+            image.alt = data.fileName;
 
-}
+            image.style.maxWidth = "300px";
+
+            image.style.maxHeight = "300px";
+
+            image.style.display = "block";
+
+            image.style.marginTop = "10px";
+
+            image.style.borderRadius = "10px";
+
+            messageDiv.appendChild(image);
+        }
 
 
-function handleEnter(event) {
+        // Download button
+        const downloadLink = document.createElement("a");
 
-    if (event.key === "Enter") {
+        downloadLink.href = decryptedMessage;
 
-        sendMessage();
+        downloadLink.download = data.fileName;
+
+        downloadLink.innerText =
+            "📥 Download " + data.fileName;
+
+        downloadLink.style.display = "inline-block";
+
+        downloadLink.style.marginTop = "10px";
+
+        messageDiv.appendChild(downloadLink);
+
+
+        // Encryption information
+        const encryptedText = document.createElement("div");
+
+        encryptedText.className = "encrypted";
+
+        encryptedText.innerText =
+            "🔒 File encrypted before transmission";
+
+        messageDiv.appendChild(encryptedText);
 
     }
 
-}
+
+    // =========================
+    // NORMAL TEXT MESSAGE
+    // =========================
+
+    else {
+
+        messageDiv.innerHTML = `
+            <strong>${escapeHTML(data.username)}</strong>
+
+            <small>${escapeHTML(data.time)}</small>
+
+            <p>${escapeHTML(decryptedMessage)}</p>
+
+            <div class="encrypted">
+                🔒 Message encrypted before transmission
+            </div>
+        `;
+    }
 
 
-function logout() {
+    // Add message to chat
+    messages.appendChild(messageDiv);
 
-    username = "";
-    secretKey = "";
+    // Scroll to latest message
+    messages.scrollTop = messages.scrollHeight;
 
-    document.getElementById("chatContainer").style.display = "none";
-
-    document.getElementById("loginBox").style.display = "block";
-
-    document.getElementById("username").value = "";
-
-    document.getElementById("secretKey").value = "";
-
-    document.getElementById("messages").innerHTML = "";
-
-}
+});
