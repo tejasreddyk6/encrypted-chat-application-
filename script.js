@@ -1,202 +1,705 @@
-function sendMessage() {
-    const input = document.getElementById("messageInput");
-    const message = input.value.trim();
+// =====================================
+// SOCKET.IO CONNECTION
+// =====================================
 
-    if (message === "") {
-        return;
-    }
+const socket = io();
 
-    const encryptedMessage = encryptMessage(message);
 
-    socket.emit("chat message", {
-        username: username,
-        message: encryptedMessage,
-        time: new Date().toLocaleTimeString()
-    });
+// =====================================
+// USER VARIABLES
+// =====================================
 
-    input.value = "";
-}
-// Maximum file size: 5 MB
+let username = "";
+let secretKey = "";
+
+
+// =====================================
+// MAXIMUM FILE SIZE
+// =====================================
+
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 
-// Send photo
+// =====================================
+// JOIN CHAT
+// =====================================
+
+function joinChat() {
+
+    const usernameInput =
+        document.getElementById("username");
+
+    const secretKeyInput =
+        document.getElementById("secretKey");
+
+    username =
+        usernameInput.value.trim();
+
+    secretKey =
+        secretKeyInput.value;
+
+    if (username === "") {
+
+        alert("Please enter your name.");
+
+        return;
+    }
+
+    if (secretKey.length < 4) {
+
+        alert(
+            "Secret key must contain at least 4 characters."
+        );
+
+        return;
+    }
+
+
+    document.getElementById("loginBox").style.display =
+        "none";
+
+    document.getElementById("chatContainer").style.display =
+        "flex";
+
+
+    document.getElementById("welcome").innerText =
+        username;
+
+
+    document.getElementById("messageInput").focus();
+}
+
+
+// =====================================
+// ENCRYPT MESSAGE
+// =====================================
+
+function encryptMessage(message) {
+
+    return CryptoJS.AES.encrypt(
+        message,
+        secretKey
+    ).toString();
+}
+
+
+// =====================================
+// DECRYPT MESSAGE
+// =====================================
+
+function decryptMessage(encryptedMessage) {
+
+    try {
+
+        const bytes =
+            CryptoJS.AES.decrypt(
+                encryptedMessage,
+                secretKey
+            );
+
+        const result =
+            bytes.toString(
+                CryptoJS.enc.Utf8
+            );
+
+        if (!result) {
+
+            return "Unable to decrypt message";
+        }
+
+        return result;
+
+    } catch (error) {
+
+        console.error(
+            "Decryption error:",
+            error
+        );
+
+        return "Unable to decrypt message";
+    }
+}
+
+
+// =====================================
+// SEND TEXT MESSAGE
+// =====================================
+
+function sendMessage() {
+
+    const input =
+        document.getElementById("messageInput");
+
+    const message =
+        input.value.trim();
+
+    if (message === "") {
+
+        return;
+    }
+
+
+    const encryptedMessage =
+        encryptMessage(message);
+
+
+    socket.emit(
+        "chat message",
+        {
+            username: username,
+
+            message: encryptedMessage,
+
+            type: "text",
+
+            time:
+                new Date().toLocaleTimeString()
+        }
+    );
+
+
+    input.value = "";
+
+    input.focus();
+}
+
+
+// =====================================
+// SEND PHOTO
+// =====================================
+
 function sendPhoto(event) {
 
-    const file = event.target.files[0];
+    const file =
+        event.target.files[0];
 
     if (!file) {
+
         return;
     }
+
+
+    if (!file.type.startsWith("image/")) {
+
+        alert("Please select an image file.");
+
+        event.target.value = "";
+
+        return;
+    }
+
 
     if (file.size > MAX_FILE_SIZE) {
-        alert("Photo must be less than 5 MB.");
+
+        alert(
+            "Photo must be less than 5 MB."
+        );
+
         event.target.value = "";
+
         return;
     }
 
+
     sendFile(file);
+
 
     event.target.value = "";
 }
 
 
-// Send document
+// =====================================
+// SEND DOCUMENT
+// =====================================
+
 function sendDocument(event) {
 
-    const file = event.target.files[0];
+    const file =
+        event.target.files[0];
 
     if (!file) {
+
         return;
     }
+
 
     if (file.size > MAX_FILE_SIZE) {
-        alert("Document must be less than 5 MB.");
+
+        alert(
+            "Document must be less than 5 MB."
+        );
+
         event.target.value = "";
+
         return;
     }
 
+
     sendFile(file);
+
 
     event.target.value = "";
 }
 
 
-// Convert file into encrypted data and send
+// =====================================
+// SEND FILE
+// =====================================
+
 function sendFile(file) {
 
-    const reader = new FileReader();
+    if (!username || !secretKey) {
+
+        alert(
+            "Please join the secure chat first."
+        );
+
+        return;
+    }
+
+
+    const reader =
+        new FileReader();
+
 
     reader.onload = function () {
 
-        // File data
-        const fileData = reader.result;
+        try {
 
-        // Encrypt file data
-        const encryptedFile = encryptMessage(fileData);
+            const fileData =
+                reader.result;
 
-        // Send encrypted file through Socket.IO
-        socket.emit("chat message", {
 
-            username: username,
+            const encryptedFile =
+                encryptMessage(fileData);
 
-            message: encryptedFile,
 
-            type: "file",
+            socket.emit(
+                "chat message",
+                {
+                    username: username,
 
-            fileName: file.name,
+                    message: encryptedFile,
 
-            fileType: file.type,
+                    type: "file",
 
-            time: new Date().toLocaleTimeString()
-        });
+                    fileName: file.name,
+
+                    fileType: file.type,
+
+                    time:
+                        new Date().toLocaleTimeString()
+                }
+            );
+
+        } catch (error) {
+
+            console.error(
+                "File encryption error:",
+                error
+            );
+
+            alert(
+                "Unable to encrypt this file."
+            );
+        }
     };
+
+
+    reader.onerror = function () {
+
+        alert(
+            "Unable to read the selected file."
+        );
+    };
+
 
     reader.readAsDataURL(file);
 }
 
 
-// Receive text messages, photos and documents
-socket.on("chat message", (data) => {
+// =====================================
+// RECEIVE CHAT MESSAGE
+// =====================================
 
-    const messages = document.getElementById("messages");
+socket.on(
+    "chat message",
+    function (data) {
 
-    const decryptedMessage = decryptMessage(data.message);
-
-    const messageDiv = document.createElement("div");
-
-    messageDiv.className = "message";
-
-
-    // =========================
-    // PHOTO OR DOCUMENT
-    // =========================
-
-    if (data.type === "file") {
-
-        messageDiv.innerHTML = `
-            <strong>${escapeHTML(data.username)}</strong>
-            <small>${escapeHTML(data.time)}</small>
-        `;
+        const messages =
+            document.getElementById(
+                "messages"
+            );
 
 
-        // If the received file is a photo
-        if (data.fileType && data.fileType.startsWith("image/")) {
+        const decryptedMessage =
+            decryptMessage(
+                data.message
+            );
 
-            const image = document.createElement("img");
 
-            image.src = decryptedMessage;
+        const messageDiv =
+            document.createElement(
+                "div"
+            );
 
-            image.alt = data.fileName;
 
-            image.style.maxWidth = "300px";
+        messageDiv.classList.add(
+            "message"
+        );
 
-            image.style.maxHeight = "300px";
 
-            image.style.display = "block";
+        // =================================
+        // MY MESSAGE / OTHER USER
+        // =================================
 
-            image.style.marginTop = "10px";
+        if (
+            data.username === username
+        ) {
 
-            image.style.borderRadius = "10px";
+            messageDiv.classList.add(
+                "me"
+            );
 
-            messageDiv.appendChild(image);
+        } else {
+
+            messageDiv.classList.add(
+                "other"
+            );
         }
 
 
-        // Download button
-        const downloadLink = document.createElement("a");
+        // =================================
+        // FILE MESSAGE
+        // =================================
 
-        downloadLink.href = decryptedMessage;
+        if (data.type === "file") {
 
-        downloadLink.download = data.fileName;
+            const sender =
+                document.createElement(
+                    "strong"
+                );
 
-        downloadLink.innerText =
-            "📥 Download " + data.fileName;
+            sender.innerText =
+                data.username;
 
-        downloadLink.style.display = "inline-block";
-
-        downloadLink.style.marginTop = "10px";
-
-        messageDiv.appendChild(downloadLink);
+            messageDiv.appendChild(
+                sender
+            );
 
 
-        // Encryption information
-        const encryptedText = document.createElement("div");
+            const time =
+                document.createElement(
+                    "small"
+                );
 
-        encryptedText.className = "encrypted";
+            time.innerText =
+                data.time;
 
-        encryptedText.innerText =
-            "🔒 File encrypted before transmission";
+            messageDiv.appendChild(
+                time
+            );
 
-        messageDiv.appendChild(encryptedText);
+
+            // =============================
+            // PHOTO
+            // =============================
+
+            if (
+                data.fileType &&
+                data.fileType.startsWith(
+                    "image/"
+                )
+            ) {
+
+                const image =
+                    document.createElement(
+                        "img"
+                    );
+
+
+                image.src =
+                    decryptedMessage;
+
+
+                image.alt =
+                    data.fileName;
+
+
+                image.classList.add(
+                    "chat-image"
+                );
+
+
+                messageDiv.appendChild(
+                    image
+                );
+            }
+
+
+            // =============================
+            // FILE NAME
+            // =============================
+
+            const fileName =
+                document.createElement(
+                    "div"
+                );
+
+            fileName.innerText =
+                "📎 " + data.fileName;
+
+            fileName.style.marginTop =
+                "8px";
+
+            fileName.style.fontWeight =
+                "bold";
+
+            messageDiv.appendChild(
+                fileName
+            );
+
+
+            // =============================
+            // DOWNLOAD
+            // =============================
+
+            const downloadLink =
+                document.createElement(
+                    "a"
+                );
+
+
+            downloadLink.href =
+                decryptedMessage;
+
+
+            downloadLink.download =
+                data.fileName;
+
+
+            downloadLink.innerText =
+                "📥 Download";
+
+
+            downloadLink.classList.add(
+                "download-link"
+            );
+
+
+            messageDiv.appendChild(
+                downloadLink
+            );
+
+
+            // =============================
+            // ENCRYPTION INFO
+            // =============================
+
+            const encryptedInfo =
+                document.createElement(
+                    "div"
+                );
+
+
+            encryptedInfo.classList.add(
+                "encrypted"
+            );
+
+
+            encryptedInfo.innerText =
+                "🔒 File encrypted before transmission";
+
+
+            messageDiv.appendChild(
+                encryptedInfo
+            );
+        }
+
+
+        // =================================
+        // TEXT MESSAGE
+        // =================================
+
+        else {
+
+            const sender =
+                document.createElement(
+                    "strong"
+                );
+
+            sender.innerText =
+                data.username;
+
+            messageDiv.appendChild(
+                sender
+            );
+
+
+            const time =
+                document.createElement(
+                    "small"
+                );
+
+            time.innerText =
+                data.time;
+
+            messageDiv.appendChild(
+                time
+            );
+
+
+            const messageText =
+                document.createElement(
+                    "p"
+                );
+
+            messageText.innerText =
+                decryptedMessage;
+
+            messageDiv.appendChild(
+                messageText
+            );
+
+
+            const encryptedInfo =
+                document.createElement(
+                    "div"
+                );
+
+
+            encryptedInfo.classList.add(
+                "encrypted"
+            );
+
+
+            encryptedInfo.innerText =
+                "🔒 Message encrypted before transmission";
+
+
+            messageDiv.appendChild(
+                encryptedInfo
+            );
+        }
+
+
+        // =================================
+        // ADD MESSAGE
+        // =================================
+
+        messages.appendChild(
+            messageDiv
+        );
+
+
+        // Scroll to latest
+        messages.scrollTop =
+            messages.scrollHeight;
+    }
+);
+
+
+// =====================================
+// ENTER KEY
+// =====================================
+
+function handleEnter(event) {
+
+    if (event.key === "Enter") {
+
+        sendMessage();
+    }
+}
+
+
+// =====================================
+// LOGOUT
+// =====================================
+
+function logout() {
+
+    username = "";
+
+    secretKey = "";
+
+
+    document.getElementById(
+        "chatContainer"
+    ).style.display = "none";
+
+
+    document.getElementById(
+        "loginBox"
+    ).style.display = "flex";
+
+
+    document.getElementById(
+        "username"
+    ).value = "";
+
+
+    document.getElementById(
+        "secretKey"
+    ).value = "";
+
+
+    document.getElementById(
+        "messages"
+    ).innerHTML = "";
+}
+
+
+// =====================================
+// PHOTO INPUT
+// =====================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const photoInput =
+            document.getElementById(
+                "photoInput"
+            );
+
+
+        const documentInput =
+            document.getElementById(
+                "documentInput"
+            );
+
+
+        if (photoInput) {
+
+            photoInput.addEventListener(
+                "change",
+                sendPhoto
+            );
+        }
+
+
+        if (documentInput) {
+
+            documentInput.addEventListener(
+                "change",
+                sendDocument
+            );
+        }
+
+
+        const messageInput =
+            document.getElementById(
+                "messageInput"
+            );
+
+
+        if (messageInput) {
+
+            messageInput.addEventListener(
+                "keydown",
+                handleEnter
+            );
+        }
 
     }
-
-
-    // =========================
-    // NORMAL TEXT MESSAGE
-    // =========================
-
-    else {
-
-        messageDiv.innerHTML = `
-            <strong>${escapeHTML(data.username)}</strong>
-
-            <small>${escapeHTML(data.time)}</small>
-
-            <p>${escapeHTML(decryptedMessage)}</p>
-
-            <div class="encrypted">
-                🔒 Message encrypted before transmission
-            </div>
-        `;
-    }
-
-
-    // Add message to chat
-    messages.appendChild(messageDiv);
-
-    // Scroll to latest message
-    messages.scrollTop = messages.scrollHeight;
-
-});
+);

@@ -1,118 +1,199 @@
-<div class="message-area">
+<!DOCTYPE html>
+<html lang="en">
 
-    <input
-        type="text"
-        id="messageInput"
-        placeholder="Type your encrypted message..."
-        onkeypress="handleEnter(event)"
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
     >
 
-    <button onclick="sendMessage()">
-        Send
-    </button>
+    <title>Encrypted Chat</title>
 
-    <!-- Photo button -->
-    <button onclick="document.getElementById('photoInput').click()">
-        📷 Photo
-    </button>
+    <link rel="stylesheet" href="style.css">
 
-    <input
-        type="file"
-        id="photoInput"
-        accept="image/*"
-        style="display:none"
-        onchange="sendPhoto(event)"
-    >
+    <!-- CryptoJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
 
-    <!-- Document button -->
-    <button onclick="document.getElementById('documentInput').click()">
-        📄 Document
-    </button>
+    <!-- Socket.IO -->
+    <script src="/socket.io/socket.io.js"></script>
+</head>
 
-    <input
-        type="file"
-        id="documentInput"
-        accept=".pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx"
-        style="display:none"
-        onchange="sendDocument(event)"
-    >
+<body>
 
-</div><div class="message-area">
+    <!-- ========================= -->
+    <!-- LOGIN SCREEN -->
+    <!-- ========================= -->
 
-    <input
-        type="text"
-        id="messageInput"
-        placeholder="Type your encrypted message..."
-        onkeypress="handleEnter(event)"
-    >
+    <div class="app">
 
-    <button onclick="sendMessage()">
-        Send
-    </button>
+        <div class="login-screen" id="loginBox">
 
-    <!-- Photo button -->
-    <button onclick="document.getElementById('photoInput').click()">
-        📷 Photo
-    </button>
+            <div class="login-card">
 
-    <input
-        type="file"
-        id="photoInput"
-        accept="image/*"
-        style="display:none"
-        onchange="sendPhoto(event)"
-    >
+                <div class="login-icon">
+                    🔐
+                </div>
 
-    <!-- Document button -->
-    <button onclick="document.getElementById('documentInput').click()">
-        📄 Document
-    </button>
+                <h1>Encrypted Chat</h1>
 
-    <input
-        type="file"
-        id="documentInput"
-        accept=".pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx"
-        style="display:none"
-        onchange="sendDocument(event)"
-    >
+                <p class="login-subtitle">
+                    Secure Real-Time Messaging
+                </p>
 
-</div><div class="message-area">
+                <input
+                    type="text"
+                    id="username"
+                    placeholder="Enter your name"
+                    autocomplete="off"
+                >
 
-    <input
-        type="text"
-        id="messageInput"
-        placeholder="Type your encrypted message..."
-        onkeypress="handleEnter(event)"
-    >
+                <input
+                    type="password"
+                    id="secretKey"
+                    placeholder="Enter secret key"
+                    autocomplete="off"
+                >
 
-    <button onclick="sendMessage()">
-        Send
-    </button>
+                <button
+                    class="join-button"
+                    onclick="joinChat()"
+                >
+                    Join Secure Chat
+                </button>
 
-    <!-- Photo button -->
-    <button onclick="document.getElementById('photoInput').click()">
-        📷 Photo
-    </button>
+                <div class="security-note">
+                    🔒 Messages are encrypted before transmission
+                </div>
 
-    <input
-        type="file"
-        id="photoInput"
-        accept="image/*"
-        style="display:none"
-        onchange="sendPhoto(event)"
-    >
+            </div>
 
-    <!-- Document button -->
-    <button onclick="document.getElementById('documentInput').click()">
-        📄 Document
-    </button>
+        </div>
 
-    <input
-        type="file"
-        id="documentInput"
-        accept=".pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx"
-        style="display:none"
-        onchange="sendDocument(event)"
-    >
 
-</div>
+        <!-- ========================= -->
+        <!-- CHAT SCREEN -->
+        <!-- ========================= -->
+
+        <div
+            class="chat-container"
+            id="chatContainer"
+        >
+
+            <!-- CHAT HEADER -->
+
+            <div class="chat-header">
+
+                <div class="chat-user">
+
+                    <div class="profile-circle">
+                        🔐
+                    </div>
+
+                    <div>
+
+                        <div
+                            class="chat-title"
+                            id="welcome"
+                        >
+                            Encrypted Chat
+                        </div>
+
+                        <div class="online-status">
+                            🟢 Secure chat
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <button
+                    class="logout-button"
+                    onclick="logout()"
+                >
+                    Logout
+                </button>
+
+            </div>
+
+
+            <!-- MESSAGES -->
+
+            <div id="messages"></div>
+
+
+            <!-- MESSAGE INPUT AREA -->
+
+            <div class="message-area">
+
+                <div class="attachment-buttons">
+
+                    <!-- PHOTO -->
+
+                    <label
+                        for="photoInput"
+                        class="attachment-button photo-button"
+                    >
+                        📷
+                        <span>Photo</span>
+                    </label>
+
+                    <input
+                        type="file"
+                        id="photoInput"
+                        accept="image/*"
+                        hidden
+                    >
+
+
+                    <!-- DOCUMENT -->
+
+                    <label
+                        for="documentInput"
+                        class="attachment-button document-button"
+                    >
+                        📄
+                        <span>Document</span>
+                    </label>
+
+                    <input
+                        type="file"
+                        id="documentInput"
+                        accept=".pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx"
+                        hidden
+                    >
+
+                </div>
+
+
+                <div class="typing-area">
+
+                    <input
+                        type="text"
+                        id="messageInput"
+                        placeholder="Type a message..."
+                        autocomplete="off"
+                    >
+
+                    <button
+                        class="send-button"
+                        onclick="sendMessage()"
+                    >
+                        ➤
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
