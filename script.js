@@ -1,30 +1,37 @@
-// =====================================
-// SOCKET.IO CONNECTION
-// =====================================
+// =====================================================
+// ENCRYPTED CHAT APPLICATION
+// =====================================================
+
+
+// =====================================================
+// SOCKET.IO
+// =====================================================
 
 const socket = io();
 
 
-// =====================================
+// =====================================================
 // USER VARIABLES
-// =====================================
+// =====================================================
 
 let username = "";
 let secretKey = "";
 
 
-// =====================================
-// MAXIMUM FILE SIZE
-// =====================================
+// =====================================================
+// FILE SIZE
+// =====================================================
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 
-// =====================================
+// =====================================================
 // JOIN CHAT
-// =====================================
+// =====================================================
 
 function joinChat() {
+
+    console.log("Join Chat button clicked");
 
     const usernameInput =
         document.getElementById("username");
@@ -32,18 +39,42 @@ function joinChat() {
     const secretKeyInput =
         document.getElementById("secretKey");
 
+    if (!usernameInput || !secretKeyInput) {
+
+        alert(
+            "Login fields were not found. Please refresh the page."
+        );
+
+        console.error(
+            "username or secretKey input missing"
+        );
+
+        return;
+    }
+
+
     username =
         usernameInput.value.trim();
 
     secretKey =
         secretKeyInput.value;
 
+
+    // Check username
+
     if (username === "") {
 
-        alert("Please enter your name.");
+        alert(
+            "Please enter your name."
+        );
+
+        usernameInput.focus();
 
         return;
     }
+
+
+    // Check secret key
 
     if (secretKey.length < 4) {
 
@@ -51,30 +82,138 @@ function joinChat() {
             "Secret key must contain at least 4 characters."
         );
 
+        secretKeyInput.focus();
+
         return;
     }
 
 
-    document.getElementById("loginBox").style.display =
+    const loginBox =
+        document.getElementById("loginBox");
+
+    const chatContainer =
+        document.getElementById("chatContainer");
+
+    const welcome =
+        document.getElementById("welcome");
+
+    const messageInput =
+        document.getElementById("messageInput");
+
+
+    if (!loginBox || !chatContainer) {
+
+        alert(
+            "Chat page elements are missing."
+        );
+
+        console.error(
+            "loginBox or chatContainer not found"
+        );
+
+        return;
+    }
+
+
+    // Hide login
+
+    loginBox.style.display =
         "none";
 
-    document.getElementById("chatContainer").style.display =
+
+    // Show chat
+
+    chatContainer.style.display =
         "flex";
 
 
-    document.getElementById("welcome").innerText =
-        username;
+    // Show username
+
+    if (welcome) {
+
+        welcome.innerText =
+            username;
+    }
 
 
-    document.getElementById("messageInput").focus();
+    // Focus message input
+
+    if (messageInput) {
+
+        messageInput.focus();
+    }
+
+
+    console.log(
+        "Successfully joined secure chat as:",
+        username
+    );
 }
 
 
-// =====================================
+// =====================================================
+// ENTER KEY - LOGIN
+// =====================================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const usernameInput =
+            document.getElementById("username");
+
+        const secretKeyInput =
+            document.getElementById("secretKey");
+
+
+        if (usernameInput) {
+
+            usernameInput.addEventListener(
+                "keydown",
+                function (event) {
+
+                    if (event.key === "Enter") {
+
+                        event.preventDefault();
+
+                        joinChat();
+                    }
+                }
+            );
+        }
+
+
+        if (secretKeyInput) {
+
+            secretKeyInput.addEventListener(
+                "keydown",
+                function (event) {
+
+                    if (event.key === "Enter") {
+
+                        event.preventDefault();
+
+                        joinChat();
+                    }
+                }
+            );
+        }
+
+    }
+);
+
+
+// =====================================================
 // ENCRYPT MESSAGE
-// =====================================
+// =====================================================
 
 function encryptMessage(message) {
+
+    if (!secretKey) {
+
+        return "";
+    }
+
 
     return CryptoJS.AES.encrypt(
         message,
@@ -83,13 +222,19 @@ function encryptMessage(message) {
 }
 
 
-// =====================================
+// =====================================================
 // DECRYPT MESSAGE
-// =====================================
+// =====================================================
 
 function decryptMessage(encryptedMessage) {
 
     try {
+
+        if (!secretKey) {
+
+            return "Unable to decrypt message";
+        }
+
 
         const bytes =
             CryptoJS.AES.decrypt(
@@ -97,15 +242,18 @@ function decryptMessage(encryptedMessage) {
                 secretKey
             );
 
+
         const result =
             bytes.toString(
                 CryptoJS.enc.Utf8
             );
 
+
         if (!result) {
 
             return "Unable to decrypt message";
         }
+
 
         return result;
 
@@ -121,17 +269,37 @@ function decryptMessage(encryptedMessage) {
 }
 
 
-// =====================================
+// =====================================================
 // SEND TEXT MESSAGE
-// =====================================
+// =====================================================
 
 function sendMessage() {
 
+    if (!username || !secretKey) {
+
+        alert(
+            "Please join the secure chat first."
+        );
+
+        return;
+    }
+
+
     const input =
-        document.getElementById("messageInput");
+        document.getElementById(
+            "messageInput"
+        );
+
+
+    if (!input) {
+
+        return;
+    }
+
 
     const message =
         input.value.trim();
+
 
     if (message === "") {
 
@@ -146,14 +314,19 @@ function sendMessage() {
     socket.emit(
         "chat message",
         {
-            username: username,
 
-            message: encryptedMessage,
+            username:
+                username,
 
-            type: "text",
+            message:
+                encryptedMessage,
+
+            type:
+                "text",
 
             time:
                 new Date().toLocaleTimeString()
+
         }
     );
 
@@ -164,14 +337,50 @@ function sendMessage() {
 }
 
 
-// =====================================
+// =====================================================
+// ENTER KEY - MESSAGE
+// =====================================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const messageInput =
+            document.getElementById(
+                "messageInput"
+            );
+
+
+        if (messageInput) {
+
+            messageInput.addEventListener(
+                "keydown",
+                function (event) {
+
+                    if (event.key === "Enter") {
+
+                        event.preventDefault();
+
+                        sendMessage();
+                    }
+
+                }
+            );
+        }
+
+    }
+);
+
+
+// =====================================================
 // SEND PHOTO
-// =====================================
+// =====================================================
 
 function sendPhoto(event) {
 
     const file =
         event.target.files[0];
+
 
     if (!file) {
 
@@ -181,7 +390,9 @@ function sendPhoto(event) {
 
     if (!file.type.startsWith("image/")) {
 
-        alert("Please select an image file.");
+        alert(
+            "Please select an image file."
+        );
 
         event.target.value = "";
 
@@ -203,19 +414,19 @@ function sendPhoto(event) {
 
     sendFile(file);
 
-
     event.target.value = "";
 }
 
 
-// =====================================
+// =====================================================
 // SEND DOCUMENT
-// =====================================
+// =====================================================
 
 function sendDocument(event) {
 
     const file =
         event.target.files[0];
+
 
     if (!file) {
 
@@ -237,14 +448,13 @@ function sendDocument(event) {
 
     sendFile(file);
 
-
     event.target.value = "";
 }
 
 
-// =====================================
+// =====================================================
 // SEND FILE
-// =====================================
+// =====================================================
 
 function sendFile(file) {
 
@@ -262,65 +472,77 @@ function sendFile(file) {
         new FileReader();
 
 
-    reader.onload = function () {
+    reader.onload =
+        function () {
 
-        try {
+            try {
 
-            const fileData =
-                reader.result;
-
-
-            const encryptedFile =
-                encryptMessage(fileData);
+                const fileData =
+                    reader.result;
 
 
-            socket.emit(
-                "chat message",
-                {
-                    username: username,
+                const encryptedFile =
+                    encryptMessage(
+                        fileData
+                    );
 
-                    message: encryptedFile,
 
-                    type: "file",
+                socket.emit(
+                    "chat message",
+                    {
 
-                    fileName: file.name,
+                        username:
+                            username,
 
-                    fileType: file.type,
+                        message:
+                            encryptedFile,
 
-                    time:
-                        new Date().toLocaleTimeString()
-                }
-            );
+                        type:
+                            "file",
 
-        } catch (error) {
+                        fileName:
+                            file.name,
 
-            console.error(
-                "File encryption error:",
-                error
-            );
+                        fileType:
+                            file.type,
+
+                        time:
+                            new Date().toLocaleTimeString()
+
+                    }
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    "File encryption error:",
+                    error
+                );
+
+                alert(
+                    "Unable to encrypt this file."
+                );
+            }
+        };
+
+
+    reader.onerror =
+        function () {
 
             alert(
-                "Unable to encrypt this file."
+                "Unable to read the selected file."
             );
-        }
-    };
-
-
-    reader.onerror = function () {
-
-        alert(
-            "Unable to read the selected file."
-        );
-    };
+        };
 
 
     reader.readAsDataURL(file);
 }
 
 
-// =====================================
+// =====================================================
 // RECEIVE CHAT MESSAGE
-// =====================================
+// =====================================================
 
 socket.on(
     "chat message",
@@ -330,6 +552,12 @@ socket.on(
             document.getElementById(
                 "messages"
             );
+
+
+        if (!messages) {
+
+            return;
+        }
 
 
         const decryptedMessage =
@@ -349,9 +577,7 @@ socket.on(
         );
 
 
-        // =================================
-        // MY MESSAGE / OTHER USER
-        // =================================
+        // MY MESSAGE
 
         if (
             data.username === username
@@ -369,41 +595,48 @@ socket.on(
         }
 
 
-        // =================================
-        // FILE MESSAGE
-        // =================================
+        // =================================================
+        // SENDER
+        // =================================================
+
+        const sender =
+            document.createElement(
+                "strong"
+            );
+
+        sender.innerText =
+            data.username;
+
+        messageDiv.appendChild(
+            sender
+        );
+
+
+        // =================================================
+        // TIME
+        // =================================================
+
+        const time =
+            document.createElement(
+                "small"
+            );
+
+        time.innerText =
+            data.time;
+
+        messageDiv.appendChild(
+            time
+        );
+
+
+        // =================================================
+        // FILE
+        // =================================================
 
         if (data.type === "file") {
 
-            const sender =
-                document.createElement(
-                    "strong"
-                );
 
-            sender.innerText =
-                data.username;
-
-            messageDiv.appendChild(
-                sender
-            );
-
-
-            const time =
-                document.createElement(
-                    "small"
-                );
-
-            time.innerText =
-                data.time;
-
-            messageDiv.appendChild(
-                time
-            );
-
-
-            // =============================
             // PHOTO
-            // =============================
 
             if (
                 data.fileType &&
@@ -437,32 +670,33 @@ socket.on(
             }
 
 
-            // =============================
             // FILE NAME
-            // =============================
 
             const fileName =
                 document.createElement(
                     "div"
                 );
 
+
             fileName.innerText =
-                "📎 " + data.fileName;
+                "📎 " +
+                data.fileName;
+
 
             fileName.style.marginTop =
                 "8px";
 
+
             fileName.style.fontWeight =
                 "bold";
+
 
             messageDiv.appendChild(
                 fileName
             );
 
 
-            // =============================
             // DOWNLOAD
-            // =============================
 
             const downloadLink =
                 document.createElement(
@@ -492,9 +726,7 @@ socket.on(
             );
 
 
-            // =============================
             // ENCRYPTION INFO
-            // =============================
 
             const encryptedInfo =
                 document.createElement(
@@ -514,48 +746,24 @@ socket.on(
             messageDiv.appendChild(
                 encryptedInfo
             );
-        }
 
 
-        // =================================
-        // TEXT MESSAGE
-        // =================================
-
-        else {
-
-            const sender =
-                document.createElement(
-                    "strong"
-                );
-
-            sender.innerText =
-                data.username;
-
-            messageDiv.appendChild(
-                sender
-            );
+        } else {
 
 
-            const time =
-                document.createElement(
-                    "small"
-                );
-
-            time.innerText =
-                data.time;
-
-            messageDiv.appendChild(
-                time
-            );
-
+            // =================================================
+            // TEXT MESSAGE
+            // =================================================
 
             const messageText =
                 document.createElement(
                     "p"
                 );
 
+
             messageText.innerText =
                 decryptedMessage;
+
 
             messageDiv.appendChild(
                 messageText
@@ -583,75 +791,24 @@ socket.on(
         }
 
 
-        // =================================
-        // ADD MESSAGE
-        // =================================
+        // =================================================
+        // ADD TO SCREEN
+        // =================================================
 
         messages.appendChild(
             messageDiv
         );
 
 
-        // Scroll to latest
         messages.scrollTop =
             messages.scrollHeight;
     }
 );
 
 
-// =====================================
-// ENTER KEY
-// =====================================
-
-function handleEnter(event) {
-
-    if (event.key === "Enter") {
-
-        sendMessage();
-    }
-}
-
-
-// =====================================
-// LOGOUT
-// =====================================
-
-function logout() {
-
-    username = "";
-
-    secretKey = "";
-
-
-    document.getElementById(
-        "chatContainer"
-    ).style.display = "none";
-
-
-    document.getElementById(
-        "loginBox"
-    ).style.display = "flex";
-
-
-    document.getElementById(
-        "username"
-    ).value = "";
-
-
-    document.getElementById(
-        "secretKey"
-    ).value = "";
-
-
-    document.getElementById(
-        "messages"
-    ).innerHTML = "";
-}
-
-
-// =====================================
-// PHOTO INPUT
-// =====================================
+// =====================================================
+// PHOTO / DOCUMENT INPUTS
+// =====================================================
 
 document.addEventListener(
     "DOMContentLoaded",
@@ -686,18 +843,427 @@ document.addEventListener(
             );
         }
 
+    }
+);
 
-        const messageInput =
+
+// =====================================================
+// LOGOUT
+// =====================================================
+
+function logout() {
+
+    username = "";
+
+    secretKey = "";
+
+
+    const loginBox =
+        document.getElementById(
+            "loginBox"
+        );
+
+
+    const chatContainer =
+        document.getElementById(
+            "chatContainer"
+        );
+
+
+    const usernameInput =
+        document.getElementById(
+            "username"
+        );
+
+
+    const secretKeyInput =
+        document.getElementById(
+            "secretKey"
+        );
+
+
+    const messages =
+        document.getElementById(
+            "messages"
+        );
+
+
+    if (chatContainer) {
+
+        chatContainer.style.display =
+            "none";
+    }
+
+
+    if (loginBox) {
+
+        loginBox.style.display =
+            "flex";
+    }
+
+
+    if (usernameInput) {
+
+        usernameInput.value = "";
+    }
+
+
+    if (secretKeyInput) {
+
+        secretKeyInput.value = "";
+    }
+
+
+    if (messages) {
+
+        messages.innerHTML = `
+
+            <div class="welcome-message">
+
+                <div class="welcome-icon">
+                    🔒
+                </div>
+
+                <h2>Welcome to Encrypted Chat</h2>
+
+                <p>
+                    Your messages are encrypted before transmission.
+                </p>
+
+            </div>
+
+        `;
+    }
+
+
+    closeAIAgent();
+}
+
+
+// =====================================================
+// AI AGENT - OPEN
+// =====================================================
+
+function openAIAgent() {
+
+    const panel =
+        document.getElementById(
+            "aiAgentPanel"
+        );
+
+
+    if (panel) {
+
+        panel.style.display =
+            "flex";
+
+
+        const input =
             document.getElementById(
-                "messageInput"
+                "aiInput"
             );
 
 
-        if (messageInput) {
+        if (input) {
 
-            messageInput.addEventListener(
+            input.focus();
+        }
+    }
+}
+
+
+// =====================================================
+// AI AGENT - CLOSE
+// =====================================================
+
+function closeAIAgent() {
+
+    const panel =
+        document.getElementById(
+            "aiAgentPanel"
+        );
+
+
+    if (panel) {
+
+        panel.style.display =
+            "none";
+    }
+}
+
+
+// =====================================================
+// ADD AI MESSAGE
+// =====================================================
+
+function addAIMessage(
+    message,
+    sender
+) {
+
+    const aiMessages =
+        document.getElementById(
+            "aiMessages"
+        );
+
+
+    if (!aiMessages) {
+
+        return;
+    }
+
+
+    const messageDiv =
+        document.createElement(
+            "div"
+        );
+
+
+    messageDiv.classList.add(
+        "ai-message"
+    );
+
+
+    if (sender === "user") {
+
+        messageDiv.classList.add(
+            "ai-user"
+        );
+
+        messageDiv.innerHTML =
+            "<strong>You</strong><p></p>";
+
+    } else {
+
+        messageDiv.classList.add(
+            "ai-bot"
+        );
+
+        messageDiv.innerHTML =
+            "<strong>🤖 AI Agent</strong><p></p>";
+    }
+
+
+    const paragraph =
+        messageDiv.querySelector(
+            "p"
+        );
+
+
+    paragraph.innerText =
+        message;
+
+
+    aiMessages.appendChild(
+        messageDiv
+    );
+
+
+    aiMessages.scrollTop =
+        aiMessages.scrollHeight;
+}
+
+
+// =====================================================
+// SEND MESSAGE TO AI
+// =====================================================
+
+async function sendAIMessage() {
+
+    const input =
+        document.getElementById(
+            "aiInput"
+        );
+
+
+    if (!input) {
+
+        return;
+    }
+
+
+    const message =
+        input.value.trim();
+
+
+    if (!message) {
+
+        return;
+    }
+
+
+    addAIMessage(
+        message,
+        "user"
+    );
+
+
+    input.value = "";
+
+
+    addAIMessage(
+        "Thinking...",
+        "bot"
+    );
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/ai-chat",
+                {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        message:
+                            message
+                    })
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        // Remove Thinking message
+
+        const aiMessages =
+            document.getElementById(
+                "aiMessages"
+            );
+
+
+        if (aiMessages) {
+
+            const allMessages =
+                aiMessages.querySelectorAll(
+                    ".ai-message"
+                );
+
+
+            const lastMessage =
+                allMessages[
+                    allMessages.length - 1
+                ];
+
+
+            if (
+                lastMessage &&
+                lastMessage.innerText.includes(
+                    "Thinking..."
+                )
+            ) {
+
+                lastMessage.remove();
+            }
+        }
+
+
+        if (!response.ok) {
+
+            addAIMessage(
+                data.error ||
+                "AI request failed.",
+                "bot"
+            );
+
+            return;
+        }
+
+
+        addAIMessage(
+            data.reply ||
+            "No response received.",
+            "bot"
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "AI error:",
+            error
+        );
+
+
+        // Remove Thinking message
+
+        const aiMessages =
+            document.getElementById(
+                "aiMessages"
+            );
+
+
+        if (aiMessages) {
+
+            const allMessages =
+                aiMessages.querySelectorAll(
+                    ".ai-message"
+                );
+
+
+            const lastMessage =
+                allMessages[
+                    allMessages.length - 1
+                ];
+
+
+            if (
+                lastMessage &&
+                lastMessage.innerText.includes(
+                    "Thinking..."
+                )
+            ) {
+
+                lastMessage.remove();
+            }
+        }
+
+
+        addAIMessage(
+            "Unable to connect to the AI Agent. Check the server and API key.",
+            "bot"
+        );
+    }
+}
+
+
+// =====================================================
+// AI ENTER KEY
+// =====================================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const aiInput =
+            document.getElementById(
+                "aiInput"
+            );
+
+
+        if (aiInput) {
+
+            aiInput.addEventListener(
                 "keydown",
-                handleEnter
+                function (event) {
+
+                    if (event.key === "Enter") {
+
+                        event.preventDefault();
+
+                        sendAIMessage();
+                    }
+
+                }
             );
         }
 

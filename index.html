@@ -4,193 +4,285 @@
 <head>
     <meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
 
-    <title>Encrypted Chat</title>
-
-    <link rel="stylesheet" href="style.css">
+    <title>Encrypted Chat Application</title>
 
     <!-- CryptoJS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
 
     <!-- Socket.IO -->
     <script src="/socket.io/socket.io.js"></script>
+
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-    <!-- ========================= -->
-    <!-- LOGIN SCREEN -->
-    <!-- ========================= -->
+    <!-- ================================================= -->
+    <!-- LOGIN PAGE -->
+    <!-- ================================================= -->
 
-    <div class="app">
+    <div id="loginBox" class="login-page">
 
-        <div class="login-screen" id="loginBox">
+        <div class="login-card">
 
-            <div class="login-card">
-
-                <div class="login-icon">
-                    🔐
-                </div>
-
-                <h1>Encrypted Chat</h1>
-
-                <p class="login-subtitle">
-                    Secure Real-Time Messaging
-                </p>
-
-                <input
-                    type="text"
-                    id="username"
-                    placeholder="Enter your name"
-                    autocomplete="off"
-                >
-
-                <input
-                    type="password"
-                    id="secretKey"
-                    placeholder="Enter secret key"
-                    autocomplete="off"
-                >
-
-                <button
-                    class="join-button"
-                    onclick="joinChat()"
-                >
-                    Join Secure Chat
-                </button>
-
-                <div class="security-note">
-                    🔒 Messages are encrypted before transmission
-                </div>
-
+            <div class="lock-icon">
+                🔐
             </div>
 
-        </div>
+            <h1>Encrypted Chat</h1>
 
+            <p class="subtitle">
+                Secure Real-Time Messaging
+            </p>
 
-        <!-- ========================= -->
-        <!-- CHAT SCREEN -->
-        <!-- ========================= -->
+            <input
+                type="text"
+                id="username"
+                placeholder="Enter your name"
+                autocomplete="off"
+            >
 
-        <div
-            class="chat-container"
-            id="chatContainer"
-        >
+            <input
+                type="password"
+                id="secretKey"
+                placeholder="Enter secret key"
+                autocomplete="off"
+            >
 
-            <!-- CHAT HEADER -->
+            <button
+                type="button"
+                id="joinButton"
+                onclick="joinChat()"
+                class="join-button"
+            >
+                Join Secure Chat
+            </button>
 
-            <div class="chat-header">
-
-                <div class="chat-user">
-
-                    <div class="profile-circle">
-                        🔐
-                    </div>
-
-                    <div>
-
-                        <div
-                            class="chat-title"
-                            id="welcome"
-                        >
-                            Encrypted Chat
-                        </div>
-
-                        <div class="online-status">
-                            🟢 Secure chat
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <button
-                    class="logout-button"
-                    onclick="logout()"
-                >
-                    Logout
-                </button>
-
-            </div>
-
-
-            <!-- MESSAGES -->
-
-            <div id="messages"></div>
-
-
-            <!-- MESSAGE INPUT AREA -->
-
-            <div class="message-area">
-
-                <div class="attachment-buttons">
-
-                    <!-- PHOTO -->
-
-                    <label
-                        for="photoInput"
-                        class="attachment-button photo-button"
-                    >
-                        📷
-                        <span>Photo</span>
-                    </label>
-
-                    <input
-                        type="file"
-                        id="photoInput"
-                        accept="image/*"
-                        hidden
-                    >
-
-
-                    <!-- DOCUMENT -->
-
-                    <label
-                        for="documentInput"
-                        class="attachment-button document-button"
-                    >
-                        📄
-                        <span>Document</span>
-                    </label>
-
-                    <input
-                        type="file"
-                        id="documentInput"
-                        accept=".pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx"
-                        hidden
-                    >
-
-                </div>
-
-
-                <div class="typing-area">
-
-                    <input
-                        type="text"
-                        id="messageInput"
-                        placeholder="Type a message..."
-                        autocomplete="off"
-                    >
-
-                    <button
-                        class="send-button"
-                        onclick="sendMessage()"
-                    >
-                        ➤
-                    </button>
-
-                </div>
-
+            <div class="security-text">
+                🔒 Messages are encrypted before transmission
             </div>
 
         </div>
 
     </div>
 
+
+    <!-- ================================================= -->
+    <!-- CHAT PAGE -->
+    <!-- ================================================= -->
+
+    <div
+        id="chatContainer"
+        class="chat-container"
+        style="display: none;"
+    >
+
+        <!-- HEADER -->
+
+        <header class="chat-header">
+
+            <div class="profile-section">
+
+                <div class="profile-icon">
+                    🔐
+                </div>
+
+                <div>
+
+                    <div
+                        id="welcome"
+                        class="username-display"
+                    >
+                        User
+                    </div>
+
+                    <div class="online-status">
+                        🟢 Secure chat
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="header-buttons">
+
+                <button
+                    type="button"
+                    onclick="openAIAgent()"
+                    class="ai-button"
+                >
+                    🤖 AI Agent
+                </button>
+
+                <button
+                    type="button"
+                    onclick="logout()"
+                    class="logout-button"
+                >
+                    Logout
+                </button>
+
+            </div>
+
+        </header>
+
+
+        <!-- MESSAGES -->
+
+        <main
+            id="messages"
+            class="messages"
+        >
+
+            <div class="welcome-message">
+
+                <div class="welcome-icon">
+                    🔒
+                </div>
+
+                <h2>Welcome to Encrypted Chat</h2>
+
+                <p>
+                    Your messages are encrypted before transmission.
+                </p>
+
+            </div>
+
+        </main>
+
+
+        <!-- FILE BUTTONS -->
+
+        <div class="file-buttons">
+
+            <label class="file-button">
+
+                📷 Photo
+
+                <input
+                    type="file"
+                    id="photoInput"
+                    accept="image/*"
+                    hidden
+                >
+
+            </label>
+
+
+            <label class="file-button">
+
+                📄 Document
+
+                <input
+                    type="file"
+                    id="documentInput"
+                    hidden
+                >
+
+            </label>
+
+        </div>
+
+
+        <!-- MESSAGE INPUT -->
+
+        <div class="message-area">
+
+            <input
+                type="text"
+                id="messageInput"
+                placeholder="Type a message..."
+                autocomplete="off"
+            >
+
+            <button
+                type="button"
+                onclick="sendMessage()"
+                class="send-button"
+            >
+                ➤
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- AI AGENT -->
+    <!-- ================================================= -->
+
+    <div
+        id="aiAgentPanel"
+        class="ai-panel"
+        style="display: none;"
+    >
+
+        <div class="ai-header">
+
+            <div>
+                🤖 AI Agent
+            </div>
+
+            <button
+                type="button"
+                onclick="closeAIAgent()"
+                class="ai-close"
+            >
+                ✕
+            </button>
+
+        </div>
+
+
+        <div
+            id="aiMessages"
+            class="ai-messages"
+        >
+
+            <div class="ai-message ai-bot">
+
+                <strong>🤖 AI Agent</strong>
+
+                <p>
+                    Hello! I'm your AI Agent.
+                    Ask me anything.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="ai-input-area">
+
+            <input
+                type="text"
+                id="aiInput"
+                placeholder="Ask AI something..."
+                autocomplete="off"
+            >
+
+            <button
+                type="button"
+                onclick="sendAIMessage()"
+                class="ai-send"
+            >
+                ➤
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- JAVASCRIPT -->
+    <!-- ================================================= -->
 
     <script src="script.js"></script>
 
