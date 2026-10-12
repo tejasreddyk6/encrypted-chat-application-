@@ -1269,3 +1269,208 @@ document.addEventListener(
 
     }
 );
+
+/* =========================================
+   FREE PHOTO EDITOR
+   ========================================= */
+
+let editorOriginalImage = null;
+let editorRotation = 0;
+let editorFlipped = false;
+
+function openPhotoEditor() {
+    const panel = document.getElementById("photoEditorPanel");
+
+    if (panel) {
+        panel.style.display = "block";
+    }
+}
+
+function closePhotoEditor() {
+    const panel = document.getElementById("photoEditorPanel");
+
+    if (panel) {
+        panel.style.display = "none";
+    }
+}
+
+function setupPhotoEditor() {
+    const input = document.getElementById("editorImageInput");
+    const canvas = document.getElementById("editorCanvas");
+
+    if (!input || !canvas) return;
+
+    const ctx = canvas.getContext("2d");
+
+    const brightness = document.getElementById("brightnessControl");
+    const contrast = document.getElementById("contrastControl");
+    const saturation = document.getElementById("saturationControl");
+    const filter = document.getElementById("filterControl");
+
+    const brightnessValue = document.getElementById("brightnessValue");
+    const contrastValue = document.getElementById("contrastValue");
+    const saturationValue = document.getElementById("saturationValue");
+    const placeholder = document.getElementById("editorPlaceholder");
+
+    input.addEventListener("change", function () {
+        const file = input.files && input.files[0];
+
+        if (!file) return;
+
+        if (!file.type.startsWith("image/")) {
+            alert("Please select an image file.");
+            input.value = "";
+            return;
+        }
+
+        if (file.size > 10 * 1024 * 1024) {
+            alert("Please choose an image smaller than 10 MB.");
+            input.value = "";
+            return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = function (event) {
+            const image = new Image();
+
+            image.onload = function () {
+                editorOriginalImage = image;
+                editorRotation = 0;
+                editorFlipped = false;
+
+                brightness.value = 100;
+                contrast.value = 100;
+                saturation.value = 100;
+                filter.value = "normal";
+
+                if (placeholder) placeholder.style.display = "none";
+
+                renderEditedPhoto();
+            };
+
+            image.onerror = function () {
+                alert("Unable to open this image. Please choose another.");
+            };
+
+            image.src = event.target.result;
+        };
+
+        reader.readAsDataURL(file);
+    });
+
+    function renderEditedPhoto() {
+        if (!editorOriginalImage) return;
+
+        const image = editorOriginalImage;
+        const quarterTurn = Math.abs(editorRotation % 180) === 90;
+
+        canvas.width = quarterTurn ? image.height : image.width;
+        canvas.height = quarterTurn ? image.width : image.height;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        let filterValue = "none";
+
+        if (filter.value === "grayscale") {
+            filterValue = "grayscale(100%)";
+        } else if (filter.value === "sepia") {
+            filterValue = "sepia(100%)";
+        } else if (filter.value === "vintage") {
+            filterValue = "sepia(45%) contrast(110%) saturate(80%)";
+        }
+
+        ctx.save();
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate(editorRotation * Math.PI / 180);
+
+        if (editorFlipped) {
+            ctx.scale(-1, 1);
+        }
+
+        ctx.filter =
+            "brightness(" + brightness.value + "%) " +
+            "contrast(" + contrast.value + "%) " +
+            "saturate(" + saturation.value + "%) " +
+            filterValue;
+
+        ctx.drawImage(
+            image,
+            -image.width / 2,
+            -image.height / 2
+        );
+
+        ctx.restore();
+        ctx.filter = "none";
+
+        brightnessValue.textContent = brightness.value + "%";
+        contrastValue.textContent = contrast.value + "%";
+        saturationValue.textContent = saturation.value + "%";
+    }
+
+    brightness.addEventListener("input", renderEditedPhoto);
+    contrast.addEventListener("input", renderEditedPhoto);
+    saturation.addEventListener("input", renderEditedPhoto);
+    filter.addEventListener("change", renderEditedPhoto);
+
+    document.getElementById("rotateLeftButton")
+        ?.addEventListener("click", function () {
+            editorRotation = (editorRotation - 90 + 360) % 360;
+            renderEditedPhoto();
+        });
+
+    document.getElementById("rotateRightButton")
+        ?.addEventListener("click", function () {
+            editorRotation = (editorRotation + 90) % 360;
+            renderEditedPhoto();
+        });
+
+    document.getElementById("flipImageButton")
+        ?.addEventListener("click", function () {
+            editorFlipped = !editorFlipped;
+            renderEditedPhoto();
+        });
+
+    document.getElementById("resetEditorButton")
+        ?.addEventListener("click", function () {
+            if (!editorOriginalImage) return;
+
+            editorRotation = 0;
+            editorFlipped = false;
+
+            brightness.value = 100;
+            contrast.value = 100;
+            saturation.value = 100;
+            filter.value = "normal";
+
+            renderEditedPhoto();
+        });
+
+    document.getElementById("downloadEditedImageButton")
+        ?.addEventListener("click", function () {
+            if (!editorOriginalImage) {
+                alert("Please choose a photo first.");
+                return;
+            }
+
+            canvas.toBlob(function (blob) {
+                if (!blob) {
+                    alert("Unable to download the edited photo.");
+                    return;
+                }
+
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+
+                link.href = url;
+                link.download = "edited-photo.png";
+                link.click();
+
+                setTimeout(function () {
+                    URL.revokeObjectURL(url);
+                }, 1000);
+            }, "image/png");
+        });
+}
+
+document.addEventListener("DOMContentLoaded", setupPhotoEditor);

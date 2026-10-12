@@ -1,12 +1,9 @@
+
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Encrypted Chat Application</title>
 
     <!-- CryptoJS -->
@@ -15,28 +12,17 @@
     <!-- Socket.IO -->
     <script src="/socket.io/socket.io.js"></script>
 
+    <!-- Existing stylesheet -->
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-    <!-- ================================================= -->
     <!-- LOGIN PAGE -->
-    <!-- ================================================= -->
-
     <div id="loginBox" class="login-page">
-
         <div class="login-card">
-
-            <div class="lock-icon">
-                🔐
-            </div>
-
+            <div class="lock-icon">🔐</div>
             <h1>Encrypted Chat</h1>
-
-            <p class="subtitle">
-                Secure Real-Time Messaging
-            </p>
+            <p class="subtitle">Secure Real-Time Messaging</p>
 
             <input
                 type="text"
@@ -64,52 +50,27 @@
             <div class="security-text">
                 🔒 Messages are encrypted before transmission
             </div>
-
         </div>
-
     </div>
 
-
-    <!-- ================================================= -->
     <!-- CHAT PAGE -->
-    <!-- ================================================= -->
-
     <div
         id="chatContainer"
         class="chat-container"
         style="display: none;"
     >
-
-        <!-- HEADER -->
-
+        <!-- CHAT HEADER -->
         <header class="chat-header">
-
             <div class="profile-section">
-
-                <div class="profile-icon">
-                    🔐
-                </div>
+                <div class="profile-icon">🔐</div>
 
                 <div>
-
-                    <div
-                        id="welcome"
-                        class="username-display"
-                    >
-                        User
-                    </div>
-
-                    <div class="online-status">
-                        🟢 Secure chat
-                    </div>
-
+                    <div id="welcome" class="username-display">User</div>
+                    <div class="online-status">🟢 Secure chat</div>
                 </div>
-
             </div>
 
-
             <div class="header-buttons">
-
                 <button
                     type="button"
                     onclick="openAIAgent()"
@@ -125,73 +86,50 @@
                 >
                     Logout
                 </button>
-
             </div>
-
         </header>
 
-
-        <!-- MESSAGES -->
-
-        <main
-            id="messages"
-            class="messages"
-        >
-
+        <!-- CHAT MESSAGES -->
+        <main id="messages" class="messages">
             <div class="welcome-message">
-
-                <div class="welcome-icon">
-                    🔒
-                </div>
-
+                <div class="welcome-icon">🔒</div>
                 <h2>Welcome to Encrypted Chat</h2>
-
-                <p>
-                    Your messages are encrypted before transmission.
-                </p>
-
+                <p>Your messages are encrypted before transmission.</p>
             </div>
-
         </main>
 
-
-        <!-- FILE BUTTONS -->
-
+        <!-- PHOTO AND DOCUMENT UPLOAD -->
         <div class="file-buttons">
-
             <label class="file-button">
-
                 📷 Photo
-
                 <input
                     type="file"
                     id="photoInput"
                     accept="image/*"
                     hidden
                 >
-
             </label>
 
-
             <label class="file-button">
-
                 📄 Document
-
                 <input
                     type="file"
                     id="documentInput"
                     hidden
                 >
-
             </label>
 
+            <button
+                type="button"
+                class="file-button"
+                onclick="openPhotoEditor()"
+            >
+                🖼️ Photo Editor
+            </button>
         </div>
 
-
         <!-- MESSAGE INPUT -->
-
         <div class="message-area">
-
             <input
                 type="text"
                 id="messageInput"
@@ -203,63 +141,154 @@
                 type="button"
                 onclick="sendMessage()"
                 class="send-button"
+                aria-label="Send message"
             >
                 ➤
             </button>
-
         </div>
-
     </div>
 
+    <!-- FREE PHOTO EDITOR PANEL -->
+    <section
+        id="photoEditorPanel"
+        class="photo-editor-panel"
+        style="display: none;"
+        aria-label="Photo editor"
+    >
+        <div class="photo-editor-header">
+            <h2>🖼️ Photo Editor</h2>
 
-    <!-- ================================================= -->
-    <!-- AI AGENT -->
-    <!-- ================================================= -->
+            <button
+                type="button"
+                onclick="closePhotoEditor()"
+                aria-label="Close photo editor"
+            >
+                ✕
+            </button>
+        </div>
 
+        <div class="photo-editor-content">
+            <label for="editorImageInput">Choose a photo</label>
+
+            <input
+                type="file"
+                id="editorImageInput"
+                accept="image/*"
+            >
+
+            <div class="photo-editor-preview">
+                <canvas
+                    id="editorCanvas"
+                    aria-label="Edited photo preview"
+                ></canvas>
+
+                <p id="editorPlaceholder">
+                    Choose a photo to start editing.
+                </p>
+            </div>
+
+            <div class="photo-editor-controls">
+                <label for="brightnessControl">
+                    Brightness
+                    <span id="brightnessValue">100%</span>
+                </label>
+                <input
+                    type="range"
+                    id="brightnessControl"
+                    min="0"
+                    max="200"
+                    value="100"
+                >
+
+                <label for="contrastControl">
+                    Contrast
+                    <span id="contrastValue">100%</span>
+                </label>
+                <input
+                    type="range"
+                    id="contrastControl"
+                    min="0"
+                    max="200"
+                    value="100"
+                >
+
+                <label for="saturationControl">
+                    Saturation
+                    <span id="saturationValue">100%</span>
+                </label>
+                <input
+                    type="range"
+                    id="saturationControl"
+                    min="0"
+                    max="200"
+                    value="100"
+                >
+
+                <label for="filterControl">Filter</label>
+                <select id="filterControl">
+                    <option value="normal">Original</option>
+                    <option value="grayscale">Black &amp; White</option>
+                    <option value="sepia">Sepia</option>
+                    <option value="vintage">Vintage</option>
+                </select>
+            </div>
+
+            <div class="photo-editor-actions">
+                <button type="button" id="rotateLeftButton">
+                    ↶ Rotate left
+                </button>
+
+                <button type="button" id="rotateRightButton">
+                    ↷ Rotate right
+                </button>
+
+                <button type="button" id="flipImageButton">
+                    ↔ Flip
+                </button>
+
+                <button type="button" id="resetEditorButton">
+                    Reset
+                </button>
+
+                <button type="button" id="downloadEditedImageButton">
+                    ⬇ Download photo
+                </button>
+            </div>
+
+            <p class="photo-editor-note">
+                Your edits are processed in your browser. Select Download
+                photo to save the edited image.
+            </p>
+        </div>
+    </section>
+
+    <!-- AI AGENT PANEL -->
     <div
         id="aiAgentPanel"
         class="ai-panel"
         style="display: none;"
     >
-
         <div class="ai-header">
-
-            <div>
-                🤖 AI Agent
-            </div>
+            <div>🤖 AI Agent</div>
 
             <button
                 type="button"
                 onclick="closeAIAgent()"
                 class="ai-close"
+                aria-label="Close AI Agent"
             >
                 ✕
             </button>
-
         </div>
 
-
-        <div
-            id="aiMessages"
-            class="ai-messages"
-        >
-
+        <div id="aiMessages" class="ai-messages">
             <div class="ai-message ai-bot">
-
                 <strong>🤖 AI Agent</strong>
-
-                <p>
-                    Hello! I'm your AI Agent.
-                    Ask me anything.
-                </p>
-
+                <p>Hello! I'm your AI Agent. Ask me anything.</p>
             </div>
-
         </div>
-
 
         <div class="ai-input-area">
-
             <input
                 type="text"
                 id="aiInput"
@@ -271,21 +300,17 @@
                 type="button"
                 onclick="sendAIMessage()"
                 class="ai-send"
+                aria-label="Send AI message"
             >
                 ➤
             </button>
-
         </div>
-
     </div>
 
-
-    <!-- ================================================= -->
-    <!-- JAVASCRIPT -->
-    <!-- ================================================= -->
-
+    <!-- EXISTING JAVASCRIPT -->
     <script src="script.js"></script>
 
-</body>
+    <!-- PHOTO EDITOR JAVASCRIPT WILL BE ADDED NEXT -->
 
+</body>
 </html>
